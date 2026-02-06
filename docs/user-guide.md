@@ -89,6 +89,7 @@ Sources define where tasks come from:
 | `markdown` | Markdown checklist (TODO.md) |
 | `github` | GitHub issues via `gh` CLI |
 | `openspec` | OpenSpec change proposals |
+| `gherkin` | Gherkin/BDD .feature files (Given/When/Then) |
 
 ### Quality Gates
 
@@ -163,6 +164,7 @@ The AI reads these files directly and updates them as it works.
 | `afk source add json tasks.json` | Add JSON tasks file |
 | `afk source add markdown TODO.md` | Add markdown checklist |
 | `afk source add github` | Add GitHub issues |
+| `afk source add gherkin features/` | Add Gherkin/BDD .feature file or directory |
 | `afk source list` | List configured sources |
 | `afk source remove 1` | Remove source by index |
 
@@ -265,7 +267,8 @@ All config lives in `.afk/config.json`:
     {"type": "json", "path": "tasks.json"},
     {"type": "markdown", "path": "TODO.md"},
     {"type": "github", "labels": ["afk"]},
-    {"type": "openspec"}
+    {"type": "openspec"},
+    {"type": "gherkin", "path": "features"}
   ]
 }
 ```
@@ -379,6 +382,26 @@ Reads tasks from [OpenSpec](https://github.com/Fission-AI/OpenSpec) change propo
 ```
 
 Scans `openspec/changes/<change-id>/tasks.md` for unchecked items and enriches them with context from proposals and specs.
+
+### Gherkin / BDD
+
+Reads job stories from Gherkin `.feature` files (Given/When/Then). Each **Scenario** or **Scenario Outline** becomes one task; steps become acceptance criteria. Add a file or directory of features:
+
+```bash
+afk source add gherkin features/
+# or a single file
+afk source add gherkin acceptance/login.feature
+```
+
+The same `.feature` files can serve as **specification** (task context for the AI) and as **functional tests**. To run them as tests, add a custom quality gate, for example:
+
+```bash
+afk config set feedback_loops.custom.bdd "cucumber"
+# or: behave features/
+# or: pytest tests/ -k bdd
+```
+
+Then `afk verify` (and the loop after each task) will run your BDD runner against the same scenarios.
 
 ## AI CLI Support
 
