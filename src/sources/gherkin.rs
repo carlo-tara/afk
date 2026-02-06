@@ -57,7 +57,8 @@ pub fn load_gherkin_tasks(path: Option<&str>) -> Vec<UserStory> {
                 if path.extension().map_or(false, |e| e == "feature") {
                     vec![path.to_path_buf()]
                 } else {
-                    vec![path.to_path_buf()]
+                    // Not a .feature file; do not attempt to parse.
+                    Vec::new()
                 }
             } else {
                 collect_feature_files(path)
@@ -101,16 +102,21 @@ pub fn load_gherkin_tasks(path: Option<&str>) -> Vec<UserStory> {
     all_stories
 }
 
-/// Collect all .feature files under a directory (one level only for simplicity).
+/// Collect all .feature files under a directory recursively.
+///
+/// Does not follow symbolic links when recursing (uses `entry.file_type().is_dir()`)
+/// to avoid infinite loops on symlink cycles.
 fn collect_feature_files(dir: &Path) -> Vec<std::path::PathBuf> {
     let mut out = Vec::new();
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_dir() {
-                out.extend(collect_feature_files(&path));
-            } else if path.extension().map_or(false, |e| e == "feature") {
-                out.push(path);
+            if let Ok(ft) = entry.file_type() {
+                if ft.is_dir() {
+                    out.extend(collect_feature_files(&path));
+                } else if path.extension().map_or(false, |e| e == "feature") {
+                    out.push(path);
+                }
             }
         }
     }
@@ -226,7 +232,11 @@ fn flush_scenario(
     }
 
     let id = make_slug(feature_name, scenario_name);
-    let description = scenario_lines.join("\n");
+    let description = if !feature_name.is_empty() {
+        format!("Feature: {}\n\n{}", feature_name, scenario_lines.join("\n"))
+    } else {
+        scenario_lines.join("\n")
+    };
     let title = scenario_name.to_string();
 
     stories.push(UserStory {
