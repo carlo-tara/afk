@@ -164,6 +164,7 @@ The AI reads these files directly and updates them as it works.
 | `afk source add json tasks.json` | Add JSON tasks file |
 | `afk source add markdown TODO.md` | Add markdown checklist |
 | `afk source add github` | Add GitHub issues |
+| `afk source add openspec` | Add OpenSpec change proposals |
 | `afk source add gherkin features/` | Add Gherkin/BDD .feature file or directory |
 | `afk source list` | List configured sources |
 | `afk source remove 1` | Remove source by index |
@@ -365,23 +366,45 @@ When `has_frontend` is enabled, the prompt includes browser testing instructions
 
 ### Beads
 
-Uses `bd ready` to get available work from your beads issue tracker.
+Syncs open and in-progress issues from your [beads](https://github.com/m0nkmaster/bd) issue tracker via the `bd` CLI. Requires `bd` to be installed.
+
+```bash
+afk source add beads
+```
+
+Beads issues are converted to tasks automatically:
+- **Acceptance criteria** are extracted from issue descriptions (looks for "Acceptance Criteria:", "AC:", "Definition of Done:", checkbox items, etc.)
+- **Priority** is mapped from the issue's priority field (supports numeric 1-5 and labels like "high", "critical", "P0")
+- When a task is completed, afk closes the corresponding beads issue via `bd close`
 
 ### GitHub Issues
 
-Uses `gh issue list`. Requires GitHub CLI to be installed and authenticated.
+Fetches open issues from GitHub via the `gh` CLI. Requires [GitHub CLI](https://cli.github.com/) to be installed and authenticated.
+
+```bash
+afk source add github
+```
+
+You can filter issues by label in your config:
+
+```json
+{"type": "github", "repo": "owner/repo", "labels": ["afk"]}
+```
+
+GitHub issues are converted to tasks with:
+- **Acceptance criteria** extracted from issue body (checkbox items and "Acceptance Criteria" sections)
+- **Priority** inferred from labels (e.g. `P0`/`critical` → highest, `P1`/`high`, `P2`/`medium`, `P3`/`low`)
+- When a task is completed, afk closes the corresponding GitHub issue via `gh issue close`
 
 ### OpenSpec
 
-Reads tasks from [OpenSpec](https://github.com/Fission-AI/OpenSpec) change proposals. Add to your config manually:
+Reads tasks from [OpenSpec](https://github.com/Fission-AI/OpenSpec) change proposals. Scans `openspec/changes/<change-id>/tasks.md` for unchecked items and enriches them with context from proposals and specs.
 
-```json
-{
-  "sources": [{"type": "openspec"}]
-}
+```bash
+afk source add openspec
 ```
 
-Scans `openspec/changes/<change-id>/tasks.md` for unchecked items and enriches them with context from proposals and specs.
+OpenSpec provides structured change proposals with formal requirements and scenarios. Each unchecked task in a change's `tasks.md` becomes a task, with context pulled from the parent proposal and spec files.
 
 ### Gherkin / BDD
 
