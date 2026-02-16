@@ -52,7 +52,7 @@ pub fn load_gherkin_tasks(path: Option<&str>) -> Vec<UserStory> {
                 return Vec::new();
             }
             if path.is_file() {
-                if path.extension().map_or(false, |e| e == "feature") {
+                if path.extension().is_some_and(|e| e == "feature") {
                     vec![path.to_path_buf()]
                 } else {
                     // Not a .feature file; do not attempt to parse.
@@ -112,7 +112,7 @@ fn collect_feature_files(dir: &Path) -> Vec<std::path::PathBuf> {
             if let Ok(ft) = entry.file_type() {
                 if ft.is_dir() {
                     out.extend(collect_feature_files(&path));
-                } else if path.extension().map_or(false, |e| e == "feature") {
+                } else if path.extension().is_some_and(|e| e == "feature") {
                     out.push(path);
                 }
             }
@@ -252,7 +252,6 @@ fn flush_scenario(
         passes: false,
         source: source.to_string(),
         notes: String::new(),
-        ..Default::default()
     });
 }
 
