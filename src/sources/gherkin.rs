@@ -18,9 +18,9 @@ static FEATURE_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^\s*Feature\s*:\s*(.+)$").expect("FEATURE_RE regex is valid")
 });
 
-/// Regex for Scenario: or Scenario Outline: line.
+/// Regex for Scenario:, Scenario Outline:, or Scenario Template: line.
 static SCENARIO_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^\s*Scenario\s*(?:\s+Outline)?\s*:\s*(.+)$")
+    Regex::new(r"^\s*Scenario(?:\s+(?:Outline|Template))?\s*:\s*(.+)$")
         .expect("SCENARIO_RE regex is valid")
 });
 
@@ -248,6 +248,7 @@ fn flush_scenario(
         passes: false,
         source: source.to_string(),
         notes: String::new(),
+        ..Default::default()
     });
 }
 
@@ -338,6 +339,27 @@ Feature: Checkout
 Feature: Search
 
   Scenario Outline: Search by keyword
+    Given the user is on the search page
+    When the user searches for "<keyword>"
+    Then results contain "<keyword>"
+
+    Examples:
+      | keyword |
+      | foo     |
+      | bar     |
+"#;
+        let stories = parse_feature_content(content, "gherkin:search.feature");
+        assert_eq!(stories.len(), 1);
+        assert_eq!(stories[0].title, "Search by keyword");
+        assert!(stories[0].acceptance_criteria.len() >= 3);
+    }
+
+    #[test]
+    fn test_parse_scenario_template() {
+        let content = r#"
+Feature: Search
+
+  Scenario Template: Search by keyword
     Given the user is on the search page
     When the user searches for "<keyword>"
     Then results contain "<keyword>"
