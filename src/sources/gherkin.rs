@@ -14,9 +14,8 @@ use std::sync::LazyLock;
 const DEFAULT_PATHS: &[&str] = &["features", "spec/features", "tests/features", "acceptance"];
 
 /// Regex for Feature: line.
-static FEATURE_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^\s*Feature\s*:\s*(.+)$").expect("FEATURE_RE regex is valid")
-});
+static FEATURE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^\s*Feature\s*:\s*(.+)$").expect("FEATURE_RE regex is valid"));
 
 /// Regex for Scenario:, Scenario Outline:, or Scenario Template: line.
 static SCENARIO_RE: LazyLock<Regex> = LazyLock::new(|| {
@@ -26,8 +25,7 @@ static SCENARIO_RE: LazyLock<Regex> = LazyLock::new(|| {
 
 /// Regex for step lines (Given, When, Then, And, But) with optional colon.
 static STEP_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^\s*(Given|When|Then|And|But)\s+(.+)$")
-        .expect("STEP_RE regex is valid")
+    Regex::new(r"^\s*(Given|When|Then|And|But)\s+(.+)$").expect("STEP_RE regex is valid")
 });
 
 /// Load tasks from Gherkin .feature file(s).
@@ -167,7 +165,10 @@ fn parse_feature_content(content: &str, source: &str) -> Vec<UserStory> {
                 steps.clear();
                 in_scenario = false;
             }
-            feature_name = cap.get(1).map(|m| m.as_str().trim().to_string()).unwrap_or_default();
+            feature_name = cap
+                .get(1)
+                .map(|m| m.as_str().trim().to_string())
+                .unwrap_or_default();
             scenario_lines.push(line.to_string());
             continue;
         }
@@ -186,7 +187,10 @@ fn parse_feature_content(content: &str, source: &str) -> Vec<UserStory> {
                 scenario_lines.clear();
                 steps.clear();
             }
-            scenario_name = cap.get(1).map(|m| m.as_str().trim().to_string()).unwrap_or_default();
+            scenario_name = cap
+                .get(1)
+                .map(|m| m.as_str().trim().to_string())
+                .unwrap_or_default();
             scenario_lines = vec![line.to_string()];
             steps = Vec::new();
             in_scenario = true;
@@ -300,7 +304,10 @@ Feature: User login
         let stories = parse_feature_content(content, "gherkin:test.feature");
         assert_eq!(stories.len(), 1);
         assert_eq!(stories[0].title, "User logs in with valid credentials");
-        assert_eq!(stories[0].id, "user-login-user-logs-in-with-valid-credentials");
+        assert_eq!(
+            stories[0].id,
+            "user-login-user-logs-in-with-valid-credentials"
+        );
         assert_eq!(stories[0].acceptance_criteria.len(), 3);
         assert!(stories[0].acceptance_criteria[0].starts_with("Given"));
         assert!(stories[0].acceptance_criteria[1].starts_with("When"));
